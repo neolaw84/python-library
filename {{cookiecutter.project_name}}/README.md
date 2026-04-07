@@ -35,6 +35,25 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev,docs]"
 ```
 
+### Bootstrap GitHub branch rules and labels
+
+Use the script below once after creating a new repository from this template.
+
+```bash
+python -m venv script-venv
+source script-venv/bin/activate   # Windows: script-venv\Scripts\activate
+pip install --upgrade pip
+pip install -r scripts/requirements-github-rules.txt
+
+export GITHUB_TOKEN="<your-admin-token>"
+python scripts/setup_github_rules.py --repo {{cookiecutter.github_username}}/{{cookiecutter.github_repo}}
+```
+
+The script configures:
+- branch protection for `main` and `dev`
+- required labels (`bump:major`, `bump:minor`, `bump:patch`)
+- Actions workflow permissions (`GITHUB_TOKEN` read/write)
+
 ### Run tests
 
 ```bash

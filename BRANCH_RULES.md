@@ -2,6 +2,8 @@
 
 Follow these steps in the GitHub repository **Settings → Branches** UI to protect the two sacred branches (`main` and `dev`).
 
+> Prefer automation? In repositories generated from this template, run `scripts/setup_github_rules.py` to apply the same branch protections, labels, and workflow-permission defaults via GitHub API.
+
 ---
 
 ## 1 · Protect `main`

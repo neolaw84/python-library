@@ -46,6 +46,11 @@ Then rename `{{cookiecutter.project_name}}/` to your actual package name and rep
 
 See [BRANCH_RULES.md](BRANCH_RULES.md) for the step-by-step GitHub UI setup guide to lock down `main` and `dev`.
 
+For repositories generated from this template, you can also run:
+- `scripts/setup_github_rules.py` (inside the generated project)
+
+This script applies branch protection rules, required labels, and workflow permissions through the GitHub API.
+
 ## PyPI Trusted Publisher setup
 
 Before the `release.yml` workflow can publish to PyPI, you must configure a **Trusted Publisher** in your PyPI project settings:
