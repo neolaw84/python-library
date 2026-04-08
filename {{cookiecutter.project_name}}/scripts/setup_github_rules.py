@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from typing import Any
@@ -44,6 +46,23 @@ LABELS: tuple[LabelConfig, ...] = (
 )
 
 
+def get_inferred_repo() -> str | None:
+    """Infer the owner/repo from git remote origin."""
+    try:
+        output = subprocess.check_output(
+            ["git", "config", "--get", "remote.origin.url"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except subprocess.CalledProcessError:
+        return None
+        
+    match = re.search(r"github\.com[:/](.+?)(?:\.git)?$", output)
+    if match:
+        return match.group(1)
+    return None
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -51,8 +70,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--repo",
-        required=True,
-        help="GitHub repository in owner/name format.",
+        help="GitHub repository in owner/name format (defaults to inferred current remote).",
     )
     parser.add_argument(
         "--token",
@@ -240,8 +258,13 @@ def main() -> int:
         print("ERROR: Approval counts must be non-negative integers.", file=sys.stderr)
         return 1
 
+    repo_slug = args.repo or get_inferred_repo()
+    if not repo_slug:
+        print("ERROR: Could not infer repository from git. Pass --repo owner/name.", file=sys.stderr)
+        return 1
+
     try:
-        owner, repo = parse_repo_slug(args.repo)
+        owner, repo = parse_repo_slug(repo_slug)
     except ValueError as err:
         print(f"ERROR: {err}", file=sys.stderr)
         return 1
