@@ -1,0 +1,64 @@
+#!/bin/bash
+# Pre-commit hook to strip outputs from Jupyter notebooks in notebooks/ directory
+# 
+# This hook:
+# 1. Finds all .ipynb files in the notebooks/ directory that are staged
+# 2. Strips their outputs using the strip_notebook_outputs.py script
+# 3. Re-stages the cleaned files
+# 4. Blocks commit if cleanup fails (dirty notebooks remain)
+
+# Get the repo root
+REPO_ROOT="$(git rev-parse --show-toplevel)" || {
+    echo "Error: Could not determine repo root" >&2
+    exit 1
+}
+
+VENV_PATH="$REPO_ROOT/venv"
+SCRIPT_PATH="$REPO_ROOT/scripts/strip_notebook_outputs.py"
+
+# Check if venv exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Warning: Virtual environment not found at $VENV_PATH - skipping notebook output cleanup" >&2
+    exit 0
+fi
+
+# Check if script exists
+if [ ! -f "$SCRIPT_PATH" ]; then
+    echo "Warning: strip_notebook_outputs.py not found at $SCRIPT_PATH - skipping notebook output cleanup" >&2
+    exit 0
+fi
+
+# Activate venv
+source "$VENV_PATH/bin/activate" || {
+    echo "Warning: Could not activate virtual environment - skipping notebook output cleanup" >&2
+    exit 0
+}
+
+# Find all .ipynb files in notebooks/ directory that are staged
+NOTEBOOKS=$(git diff --cached --name-only --diff-filter=ACMRU 2>/dev/null | grep "^notebooks/.*\.ipynb$") || true
+
+# If no notebooks found, exit successfully
+if [ -z "$NOTEBOOKS" ]; then
+    exit 0
+fi
+
+echo "Stripping outputs from staged notebooks..."
+
+# Run the script on each notebook
+if ! python "$SCRIPT_PATH" $NOTEBOOKS; then
+    echo "Error: Failed to strip notebook outputs" >&2
+    exit 1
+fi
+
+# Re-stage the cleaned notebooks
+for notebook in $NOTEBOOKS; do
+    if [ -f "$notebook" ]; then
+        git add "$notebook" || {
+            echo "Error: Failed to re-stage cleaned notebook: $notebook" >&2
+            exit 1
+        }
+    fi
+done
+
+echo "Pre-commit hook completed successfully"
+exit 0
