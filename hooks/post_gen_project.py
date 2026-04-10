@@ -25,6 +25,13 @@ def install_pre_commit_hook() -> None:
     print("✓ Installed pre-commit hook")
 
 
+def create_initial_tag() -> None:
+    subprocess.run(["git", "add", "."], check=True)
+    subprocess.run(["git", "commit", "-m", "Initial commit"], check=True)
+    subprocess.run(["git", "tag", "-a", "v{{cookiecutter.version}}", "-m", "Release v{{cookiecutter.version}}"], check=True)
+    print("✓ Created initial commit and annotated tag v{{cookiecutter.version}}")
+
+
 def print_next_steps() -> None:
     project_name = os.path.basename(PROJECT_DIR)
     print(f"""
@@ -33,17 +40,20 @@ Project '{project_name}' is ready. Next steps:
   1. Create a GitHub repository, then:
        git remote add origin git@github.com:<you>/{project_name}.git
 
-  2. Make an initial commit and push:
-       git add .
-       git commit -m "Initial commit"
+  2. Push the initial commit and version tag:
        git push -u origin main
+       git push origin v{{cookiecutter.version}}
 
   3. Set up branch protection rules and labels:
        python scripts/setup_github_rules.py
+
+  Note: the version tag v{{cookiecutter.version}} is required by setuptools-scm.
+        Future releases are tagged automatically by release.yml on merge to main.
 """)
 
 
 if __name__ == "__main__":
     git_init()
     install_pre_commit_hook()
+    create_initial_tag()
     print_next_steps()

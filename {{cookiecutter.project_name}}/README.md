@@ -71,7 +71,17 @@ mkdocs serve
 1. Fork the repository and create your feature branch from **dev**.
 2. Add tests for every new behaviour.
 3. Open a Pull Request targeting **dev** — CI will gate on tests + coverage.
-4. Label your PR with `bump:major`, `bump:minor` (default), or `bump:patch` to control the version bump.
+4. Label your PR with `bump:major`, `bump:minor` (default), or `bump:patch` to control the version bump when it is eventually merged to **main**.
+
+### Versioning
+
+This project uses [git-tag-based versioning](https://setuptools-scm.readthedocs.io/).
+There is no `version` field in `pyproject.toml`.
+
+- On feature branches the installed version will have a dev suffix (e.g. `1.2.0.dev3+gabcdef0`). This is intentional.
+- The final version is set automatically when a PR is merged to **main**: `release.yml` reads the bump label, computes the next semver, creates an annotated git tag, and builds the release artefacts.
+- To preview the next tag locally: `python scripts/bump_version.py minor --dry-run`
+- To create the initial tag on a brand-new repo: `git tag v0.1.0 && git push origin v0.1.0`
 
 ## License
 
