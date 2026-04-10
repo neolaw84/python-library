@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=64", "setuptools-scm>=8", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "{{cookiecutter.project_name}}"
-version = "{{cookiecutter.version}}"
+dynamic = ["version"]
 description = "{{cookiecutter.project_description}}"
 readme = "README.md"
 requires-python = "{{cookiecutter.python_requires}}"
@@ -56,3 +56,10 @@ omit = ["tests/*"]
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.setuptools_scm]
+# Version is derived from git tags (e.g. v1.2.3).
+# A reachable annotated tag is required; run `git tag v0.1.0` if starting fresh.
+# During development on untagged branches, setuptools-scm produces a PEP 440
+# dev suffix such as 1.2.3.dev4+gabcdef0; this is intentional and expected.
+version_file = "src/{{cookiecutter.project_name}}/_version.py"

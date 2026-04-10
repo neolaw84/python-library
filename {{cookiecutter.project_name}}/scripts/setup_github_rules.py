@@ -31,17 +31,17 @@ LABELS: tuple[LabelConfig, ...] = (
     LabelConfig(
         name="bump:major",
         color="E11D48",
-        description="Breaking change — bump major version",
+        description="Breaking change — bump major version on merge to main",
     ),
     LabelConfig(
         name="bump:minor",
         color="0EA5E9",
-        description="New feature — bump minor version (default)",
+        description="New feature — bump minor version on merge to main (default)",
     ),
     LabelConfig(
         name="bump:patch",
         color="22C55E",
-        description="Bug fix — bump patch version",
+        description="Bug fix — bump patch version on merge to main",
     ),
 )
 

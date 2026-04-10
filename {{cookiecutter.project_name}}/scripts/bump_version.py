@@ -1,65 +1,82 @@
 #!/usr/bin/env python3
-"""Bump the version string inside pyproject.toml.
+"""Create the next semver git tag locally.
+
+This project uses git-tag-based versioning (setuptools-scm).  There is no
+version field in pyproject.toml.  Use this script to preview or create the
+next tag on your local branch before pushing.
 
 Usage:
-    python scripts/bump_version.py <major|minor|micro|patch>
+    python scripts/bump_version.py <major|minor|micro|patch> [--dry-run]
+
+Examples:
+    python scripts/bump_version.py minor            # tags v1.3.0 locally
+    python scripts/bump_version.py patch --dry-run  # prints tag, does nothing
+
+Note: in CI the tag is created automatically by release.yml on merge to main.
 """
 
-import re
+from __future__ import annotations
+
+import subprocess
 import sys
-from pathlib import Path
 
 
-def bump_version(bump_type: str) -> None:
-    """Read pyproject.toml, increment the requested version component, and write it back."""
-    pyproject_path = Path("pyproject.toml")
-    if not pyproject_path.exists():
-        print("ERROR: pyproject.toml not found. Run this script from the project root.")
-        sys.exit(1)
+def latest_tag() -> str:
+    """Return the most recent semver tag reachable from HEAD, or v0.0.0."""
+    try:
+        return subprocess.check_output(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except subprocess.CalledProcessError:
+        return "v0.0.0"
 
-    content = pyproject_path.read_text(encoding="utf-8")
 
-    match = re.search(r'^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content, re.MULTILINE)
-    if not match:
-        print("ERROR: Could not locate a version = \"X.Y.Z\" line in pyproject.toml.")
-        sys.exit(1)
-
-    major, minor, micro = int(match.group(1)), int(match.group(2)), int(match.group(3))
-    old_version = f"{major}.{minor}.{micro}"
+def next_tag(bump_type: str) -> str:
+    """Calculate the next tag string for the given bump type."""
+    current = latest_tag().lstrip("v")
+    parts = current.split(".")
+    major, minor, micro = int(parts[0]), int(parts[1]), int(parts[2])
 
     if bump_type == "major":
-        major += 1
-        minor = 0
-        micro = 0
+        major += 1; minor = 0; micro = 0
     elif bump_type == "minor":
-        minor += 1
-        micro = 0
+        minor += 1; micro = 0
     elif bump_type in ("micro", "patch"):
         micro += 1
     else:
         print(f"ERROR: Unknown bump type '{bump_type}'. Use major, minor, micro, or patch.")
         sys.exit(1)
 
-    new_version = f"{major}.{minor}.{micro}"
+    return f"v{major}.{minor}.{micro}"
 
-    # Use re.sub targeting the exact matched span so we never accidentally
-    # replace a version string that appears elsewhere (e.g. in a comment or
-    # as a dependency constraint).
-    new_content = re.sub(
-        r'^(version\s*=\s*)"[^"]+"',
-        f'\\1"{new_version}"',
-        content,
-        count=1,
-        flags=re.MULTILINE,
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__)
+        sys.exit(0)
+
+    bump_type = args[0]
+    dry_run = "--dry-run" in args
+
+    tag = next_tag(bump_type)
+    current = latest_tag()
+    print(f"Current tag : {current}")
+    print(f"Next tag    : {tag}")
+
+    if dry_run:
+        print("Dry run — no tag created.")
+        return
+
+    subprocess.run(
+        ["git", "tag", "-a", tag, "-m", f"Release {tag}"],
+        check=True,
     )
-
-    pyproject_path.write_text(new_content, encoding="utf-8")
-    print(f"Version bumped: {old_version} → {new_version}")
+    print(f"✓ Created annotated tag {tag}")
+    print(f"  Push with: git push origin {tag}")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: bump_version.py <major|minor|micro|patch>")
-        sys.exit(1)
-
-    bump_version(sys.argv[1])
+    main()
