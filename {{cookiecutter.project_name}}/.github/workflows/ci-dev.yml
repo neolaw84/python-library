@@ -31,7 +31,7 @@ on:
 
 # Cancel an older in-flight run for the same PR when a new push arrives.
 concurrency:
-  group: ci-dev-pr-${{ github.event.pull_request.number }}
+  group: ci-dev-pr-${{ '{{ github.event.pull_request.number }}' }}
   cancel-in-progress: true
 
 jobs:
@@ -79,7 +79,7 @@ jobs:
       - name: Determine coverage threshold
         id: threshold
         run: |
-          if [ "${{ steps.loc.outputs.loc }}" -gt 1000 ]; then
+          if [ "${{ '{{ steps.loc.outputs.loc }}' }}" -gt 1000 ]; then
             echo "threshold=80" >> "$GITHUB_OUTPUT"
             echo "Threshold: 80% (src LOC > 1 000)"
           else
@@ -94,7 +94,7 @@ jobs:
       # ── Enforce threshold ──────────────────────────────────────────────────
       - name: Check coverage threshold
         run: |
-          THRESHOLD=${{ steps.threshold.outputs.threshold }}
+          THRESHOLD=${{ '{{ steps.threshold.outputs.threshold }}' }}
           COVERAGE=$(python - <<'EOF'
           import xml.etree.ElementTree as ET
           tree = ET.parse("coverage.xml")
