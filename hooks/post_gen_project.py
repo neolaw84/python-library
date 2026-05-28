@@ -9,7 +9,7 @@ import stat
 import subprocess
 
 PROJECT_DIR = os.getcwd()
-PRE_COMMIT_TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pre-commit-template")
+PRE_COMMIT_TEMPLATE = os.path.join(r"{{ cookiecutter._repo_dir }}", "hooks", "pre-commit-template")
 PRE_COMMIT_HOOK = os.path.join(".git", "hooks", "pre-commit")
 
 
