@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Check source branch
         run: |
-          SOURCE="${{ github.head_ref }}"
+          SOURCE="${{ '{{ github.head_ref }}' }}"
           echo "Source branch: ${SOURCE}"
           if [ "${SOURCE}" != "dev" ]; then
             echo "::error::Pull requests to main must come from the 'dev' branch. \
